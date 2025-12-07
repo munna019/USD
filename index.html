@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Unlimited Dollar Clicker</title>
+    <style>
+        /* বেসিক স্টাইল */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #000;
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+            position: relative;
+        }
+
+        /* উইথড্র বাটন (ডান কোণায় ছোট করে) */
+        .withdraw-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 1px solid #c0392b;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+
+        .withdraw-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ব্যালেন্স সেকশন (সাইজ ছোট করা হয়েছে) */
+        .balance-container {
+            text-align: center;
+            margin-bottom: 40px;
+            z-index: 10;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        .balance {
+            font-size: 32px; /* আগে 48px ছিল, এখন ছোট করা হয়েছে */
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .dollar-sign {
+            color: #ffd700;
+            font-size: 32px;
+        }
+
+        /* মেইন কয়েন বাটন */
+        .coin-container {
+            position: relative;
+            width: 190px;
+            height: 190px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .coin {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b, #5e4303);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.5);
+            border: 6px solid #d4af37;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .coin::after {
+            content: '$';
+            font-size: 85px;
+            font-weight: bold;
+            color: rgba(94, 67, 3, 0.6);
+        }
+
+        .coin-container:active {
+            transform: scale(0.90);
+        }
+
+        /* ভাসমান নম্বর অ্যানিমেশন */
+        .floating-text {
+            position: absolute;
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 100;
+            text-shadow: 0 0 5px #ffd700;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.2); opacity: 0; }
+        }
+
+        /* মডাল (উইথড্র পপআপ এর জন্য) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none; /* ডিফল্ট হাইড থাকবে */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: #16213e;
+            padding: 25px;
+            border-radius: 15px;
+            width: 85%;
+            max-width: 300px;
+            text-align: center;
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .modal-msg {
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .bkash-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #0f172a;
+            color: white;
+            outline: none;
+        }
+
+        .action-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .btn-close { background: #555; color: white; }
+        .btn-confirm { background: #27ae60; color: white; }
+
+    </style>
+</head>
+<body>
+
+    <!-- উইথড্র বাটন -->
+    <div class="withdraw-btn" onclick="openWithdrawModal()">Withdraw</div>
+
+    <!-- ব্যালেন্স শো করা -->
+    <div class="balance-container">
+        <div class="balance-label">Your Balance</div>
+        <div class="balance">
+            <span class="dollar-sign">$</span>
+            <span id="score">0</span>
+        </div>
+    </div>
+
+    <!-- গোল্ডেন কয়েন (ক্লিক এরিয়া) -->
+    <div class="coin-container" id="tapButton">
+        <div class="coin"></div>
+    </div>
+
+    <!-- উইথড্র মডাল (পপআপ) -->
+    <div class="modal-overlay" id="withdrawModal">
+        <div class="modal-box">
+            <h3 class="modal-title" id="mTitle">Withdraw Funds</h3>
+            <p class="modal-msg" id="mMsg">Minimum withdraw limit is $50,000.</p>
+            
+            <!-- বিকাশ ইনপুট -->
+            <input type="number" id="bkashNumber" class="bkash-input" placeholder="Enter Bkash Number" style="display: none;">
+            
+            <button class="action-btn btn-confirm" id="confirmBtn" style="display: none;" onclick="processWithdraw()">Confirm</button>
+            <button class="action-btn btn-close" onclick="closeWithdrawModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // আপনার লিঙ্ক
+        const directLink = "https://otieu.com/4/10288487";
+
+        // ভেরিয়েবল
+        let score = localStorage.getItem('userScore') ? parseInt(localStorage.getItem('userScore')) : 0;
+        let clickCount = 0;
+        const scoreEl = document.getElementById('score');
+        const tapBtn = document.getElementById('tapButton');
+        const withdrawLimit = 50000; // উইথড্র লিমিট
+
+        // পেজ লোড হলে স্কোর দেখানো
+        scoreEl.innerText = score.toLocaleString();
+
+        // ক্লিক ইভেন্ট
+        tapBtn.addEventListener('click', (e) => {
+            score += 1; 
+            scoreEl.innerText = score.toLocaleString();
+            localStorage.setItem('userScore', score);
+
+            // লিঙ্ক ওপেন লজিক
+            clickCount++;
+            if (clickCount % 5 === 0) { 
+                window.open(directLink, '_blank');
+            } else if (clickCount === 1) {
+                 window.open(directLink, '_blank');
+            }
+
+            // অ্যানিমেশন
+            showFloatingText(e);
+
+            if (navigator.vibrate) navigator.vibrate(40);
+        });
+
+        // ভাসমান টেক্সট
+        function showFloatingText(e) {
+            const floatDiv = document.createElement('div');
+            floatDiv.classList.add('floating-text');
+            floatDiv.innerText = "+$1";
+            
+            let x = e.clientX;
+            let y = e.clientY;
+
+            if(!x && e.target) {
+                const rect = e.target.getBoundingClientRect();
+                x = rect.left + rect.width / 2;
+                y = rect.top + rect.height / 2;
+            }
+
+            floatDiv.style.left = `${x}px`;
+            floatDiv.style.top = `${y}px`;
+
+            document.body.appendChild(floatDiv);
+
+            setTimeout(() => { floatDiv.remove(); }, 1000);
+        }
+
+        // --- উইথড্র লজিক ---
+
+        const modal = document.getElementById('withdrawModal');
+        const mTitle = document.getElementById('mTitle');
+        const mMsg = document.getElementById('mMsg');
+        const bkashInput = document.getElementById('bkashNumber');
+        const confirmBtn = document.getElementById('confirmBtn');
+
+        function openWithdrawModal() {
+            modal.style.display = 'flex';
+            bkashInput.value = ''; // ইনপুট ক্লিয়ার করা
+
+            if (score >= withdrawLimit) {
+                // যদি ৫০,০০০ এর বেশি হয়
+                mTitle.innerText = "Cash Out";
+                mMsg.innerText = "Enter your Bkash number to receive payment.";
+                bkashInput.style.display = "block";
+                confirmBtn.style.display = "inline-block";
+            } else {
+                // যদি ৫০,০০০ এর কম হয়
+                let needed = (withdrawLimit - score).toLocaleString();
+                mTitle.innerText = "Insufficient Balance";
+                mMsg.innerText = `You need ${needed} more dollars to withdraw. Limit: $50,000`;
+                bkashInput.style.display = "none";
+                confirmBtn.style.display = "none";
+            }
+        }
+
+        function closeWithdrawModal() {
+            modal.style.display = 'none';
+        }
+
+        function processWithdraw() {
+            const number = bkashInput.value;
+            if (number.length < 10) {
+                alert("Please enter a valid Bkash number!");
+                return;
+            }
+
+            // উইথড্র সাকসেস হলে
+            alert("Withdrawal request submitted successfully for " + number + "!\nPlease wait 24 hours.");
+            
+            // স্কোর রিসেট করতে চাইলে নিচের লাইনটি আনকমেন্ট করুন
+            // score = 0; scoreEl.innerText = "0"; localStorage.setItem('userScore', 0);
+            
+            closeWithdrawModal();
+        }
+
+    </script>
+</body>
+</html>
