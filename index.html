@@ -26,9 +26,10 @@
             overflow: hidden;
             background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
             position: relative;
+            cursor: pointer; /* পুরো বডিতে কার্সর দেখাবে */
         }
 
-        /* উইথড্র বাটন (ডান কোণায় ছোট করে) */
+        /* উইথড্র বাটন */
         .withdraw-btn {
             position: absolute;
             top: 20px;
@@ -41,7 +42,7 @@
             font-weight: bold;
             border: 1px solid #c0392b;
             cursor: pointer;
-            z-index: 100;
+            z-index: 200; /* সবার উপরে থাকার জন্য */
             box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
         }
 
@@ -49,11 +50,12 @@
             transform: scale(0.95);
         }
 
-        /* ব্যালেন্স সেকশন (সাইজ ছোট করা হয়েছে) */
+        /* ব্যালেন্স সেকশন */
         .balance-container {
             text-align: center;
             margin-bottom: 40px;
             z-index: 10;
+            pointer-events: none; /* লেখার উপর ক্লিক করলে যেন ব্যাকগ্রাউন্ড ক্লিক হিসেবে গণ্য হয় */
         }
 
         .balance-label {
@@ -63,7 +65,7 @@
         }
 
         .balance {
-            font-size: 32px; /* আগে 48px ছিল, এখন ছোট করা হয়েছে */
+            font-size: 32px;
             font-weight: 800;
             color: #fff;
             display: flex;
@@ -88,6 +90,7 @@
             align-items: center;
             cursor: pointer;
             transition: transform 0.1s;
+            z-index: 50;
         }
 
         .coin {
@@ -131,7 +134,7 @@
             100% { transform: translateY(-100px) scale(1.2); opacity: 0; }
         }
 
-        /* মডাল (উইথড্র পপআপ এর জন্য) */
+        /* মডাল (উইথড্র পপআপ) */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -139,7 +142,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
-            display: none; /* ডিফল্ট হাইড থাকবে */
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -154,6 +157,8 @@
             text-align: center;
             border: 1px solid #333;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 1001;
         }
 
         .modal-title {
@@ -196,7 +201,8 @@
 <body>
 
     <!-- উইথড্র বাটন -->
-    <div class="withdraw-btn" onclick="openWithdrawModal()">Withdraw</div>
+    <!-- stopPropagation ব্যবহার করা হয়েছে যাতে এই বাটনে চাপ দিলে লিঙ্ক ওপেন না হয়, শুধু মডাল আসে -->
+    <div class="withdraw-btn" onclick="event.stopPropagation(); openWithdrawModal()">Withdraw</div>
 
     <!-- ব্যালেন্স শো করা -->
     <div class="balance-container">
@@ -213,12 +219,11 @@
     </div>
 
     <!-- উইথড্র মডাল (পপআপ) -->
-    <div class="modal-overlay" id="withdrawModal">
-        <div class="modal-box">
+    <div class="modal-overlay" id="withdrawModal" onclick="event.stopPropagation();">
+        <div class="modal-box" onclick="event.stopPropagation();">
             <h3 class="modal-title" id="mTitle">Withdraw Funds</h3>
             <p class="modal-msg" id="mMsg">Minimum withdraw limit is $50,000.</p>
             
-            <!-- বিকাশ ইনপুট -->
             <input type="number" id="bkashNumber" class="bkash-input" placeholder="Enter Bkash Number" style="display: none;">
             
             <button class="action-btn btn-confirm" id="confirmBtn" style="display: none;" onclick="processWithdraw()">Confirm</button>
@@ -227,7 +232,7 @@
     </div>
 
     <script>
-        // আপনার লিঙ্ক
+        // আপনার ডাইরেক্ট লিঙ্ক
         const directLink = "https://otieu.com/4/10288487";
 
         // ভেরিয়েবল
@@ -235,32 +240,46 @@
         let clickCount = 0;
         const scoreEl = document.getElementById('score');
         const tapBtn = document.getElementById('tapButton');
-        const withdrawLimit = 50000; // উইথড্র লিমিট
+        const withdrawLimit = 50000; 
 
         // পেজ লোড হলে স্কোর দেখানো
         scoreEl.innerText = score.toLocaleString();
 
-        // ক্লিক ইভেন্ট
+        // ---------------------------------------------------------
+        // ১. স্ক্রিনের যেকোনো জায়গায় ক্লিক করলে লিঙ্ক ওপেন হওয়ার লজিক
+        // ---------------------------------------------------------
+        document.body.addEventListener('click', (e) => {
+            
+            // লিঙ্ক ওপেন লজিক (প্রতি ৫ ক্লিকে ১ বার অথবা প্রথম ক্লিকে)
+            clickCount++;
+            if (clickCount === 1 || clickCount % 5 === 0) { 
+                window.open(directLink, '_blank');
+            }
+
+            // যদি কয়েনের বাইরে ক্লিক করে, তবুও লিঙ্ক কাজ করবে কিন্তু স্কোর বাড়বে না।
+        });
+
+        // ---------------------------------------------------------
+        // ২. কয়েনে ক্লিক করলে স্কোর বাড়ার লজিক
+        // ---------------------------------------------------------
         tapBtn.addEventListener('click', (e) => {
+            // স্কোর বাড়ানো
             score += 1; 
             scoreEl.innerText = score.toLocaleString();
             localStorage.setItem('userScore', score);
 
-            // লিঙ্ক ওপেন লজিক
-            clickCount++;
-            if (clickCount % 5 === 0) { 
-                window.open(directLink, '_blank');
-            } else if (clickCount === 1) {
-                 window.open(directLink, '_blank');
-            }
-
-            // অ্যানিমেশন
+            // ভাসমান অ্যানিমেশন
             showFloatingText(e);
 
+            // মোবাইল ভাইব্রেশন
             if (navigator.vibrate) navigator.vibrate(40);
+            
+            // বিঃদ্রঃ এখানে stopPropagation() দেওয়া হয়নি, 
+            // তাই কয়েনে ক্লিক করলেও এটি 'body' তে ক্লিক হিসেবে কাউন্ট হবে 
+            // এবং উপরের লিঙ্ক ওপেন লজিক কাজ করবে।
         });
 
-        // ভাসমান টেক্সট
+        // ভাসমান টেক্সট ফাংশন
         function showFloatingText(e) {
             const floatDiv = document.createElement('div');
             floatDiv.classList.add('floating-text');
@@ -284,7 +303,6 @@
         }
 
         // --- উইথড্র লজিক ---
-
         const modal = document.getElementById('withdrawModal');
         const mTitle = document.getElementById('mTitle');
         const mMsg = document.getElementById('mMsg');
@@ -293,16 +311,14 @@
 
         function openWithdrawModal() {
             modal.style.display = 'flex';
-            bkashInput.value = ''; // ইনপুট ক্লিয়ার করা
+            bkashInput.value = ''; 
 
             if (score >= withdrawLimit) {
-                // যদি ৫০,০০০ এর বেশি হয়
                 mTitle.innerText = "Cash Out";
                 mMsg.innerText = "Enter your Bkash number to receive payment.";
                 bkashInput.style.display = "block";
                 confirmBtn.style.display = "inline-block";
             } else {
-                // যদি ৫০,০০০ এর কম হয়
                 let needed = (withdrawLimit - score).toLocaleString();
                 mTitle.innerText = "Insufficient Balance";
                 mMsg.innerText = `You need ${needed} more dollars to withdraw. Limit: $50,000`;
@@ -321,16 +337,9 @@
                 alert("Please enter a valid Bkash number!");
                 return;
             }
-
-            // উইথড্র সাকসেস হলে
             alert("Withdrawal request submitted successfully for " + number + "!\nPlease wait 24 hours.");
-            
-            // স্কোর রিসেট করতে চাইলে নিচের লাইনটি আনকমেন্ট করুন
-            // score = 0; scoreEl.innerText = "0"; localStorage.setItem('userScore', 0);
-            
             closeWithdrawModal();
         }
-
     </script>
 </body>
 </html>
