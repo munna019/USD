@@ -26,7 +26,7 @@
             overflow: hidden;
             background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
             position: relative;
-            cursor: pointer; /* পুরো বডিতে কার্সর দেখাবে */
+            cursor: pointer;
         }
 
         /* উইথড্র বাটন */
@@ -42,7 +42,7 @@
             font-weight: bold;
             border: 1px solid #c0392b;
             cursor: pointer;
-            z-index: 200; /* সবার উপরে থাকার জন্য */
+            z-index: 200;
             box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
         }
 
@@ -55,7 +55,7 @@
             text-align: center;
             margin-bottom: 40px;
             z-index: 10;
-            pointer-events: none; /* লেখার উপর ক্লিক করলে যেন ব্যাকগ্রাউন্ড ক্লিক হিসেবে গণ্য হয় */
+            pointer-events: none;
         }
 
         .balance-label {
@@ -200,8 +200,7 @@
 </head>
 <body>
 
-    <!-- উইথড্র বাটন -->
-    <!-- stopPropagation ব্যবহার করা হয়েছে যাতে এই বাটনে চাপ দিলে লিঙ্ক ওপেন না হয়, শুধু মডাল আসে -->
+    <!-- উইথড্র বাটন (এটিতে চাপ দিলে লিঙ্ক ওপেন হবে না, শুধু মডাল আসবে) -->
     <div class="withdraw-btn" onclick="event.stopPropagation(); openWithdrawModal()">Withdraw</div>
 
     <!-- ব্যালেন্স শো করা -->
@@ -237,7 +236,6 @@
 
         // ভেরিয়েবল
         let score = localStorage.getItem('userScore') ? parseInt(localStorage.getItem('userScore')) : 0;
-        let clickCount = 0;
         const scoreEl = document.getElementById('score');
         const tapBtn = document.getElementById('tapButton');
         const withdrawLimit = 50000; 
@@ -246,21 +244,15 @@
         scoreEl.innerText = score.toLocaleString();
 
         // ---------------------------------------------------------
-        // ১. স্ক্রিনের যেকোনো জায়গায় ক্লিক করলে লিঙ্ক ওপেন হওয়ার লজিক
+        // ১. বডির যেকোনো জায়গায় ক্লিক করলেই লিঙ্ক ওপেন হবে (Every Click)
         // ---------------------------------------------------------
         document.body.addEventListener('click', (e) => {
-            
-            // লিঙ্ক ওপেন লজিক (প্রতি ৫ ক্লিকে ১ বার অথবা প্রথম ক্লিকে)
-            clickCount++;
-            if (clickCount === 1 || clickCount % 5 === 0) { 
-                window.open(directLink, '_blank');
-            }
-
-            // যদি কয়েনের বাইরে ক্লিক করে, তবুও লিঙ্ক কাজ করবে কিন্তু স্কোর বাড়বে না।
+            // কোনো শর্ত ছাড়াই প্রতিবার লিঙ্ক ওপেন হবে
+            window.open(directLink, '_blank');
         });
 
         // ---------------------------------------------------------
-        // ২. কয়েনে ক্লিক করলে স্কোর বাড়ার লজিক
+        // ২. কয়েনে ক্লিক করলে স্কোর বাড়বে + লিঙ্ক ওপেন হবে (বডি ইভেন্টের কারণে)
         // ---------------------------------------------------------
         tapBtn.addEventListener('click', (e) => {
             // স্কোর বাড়ানো
@@ -273,10 +265,6 @@
 
             // মোবাইল ভাইব্রেশন
             if (navigator.vibrate) navigator.vibrate(40);
-            
-            // বিঃদ্রঃ এখানে stopPropagation() দেওয়া হয়নি, 
-            // তাই কয়েনে ক্লিক করলেও এটি 'body' তে ক্লিক হিসেবে কাউন্ট হবে 
-            // এবং উপরের লিঙ্ক ওপেন লজিক কাজ করবে।
         });
 
         // ভাসমান টেক্সট ফাংশন
